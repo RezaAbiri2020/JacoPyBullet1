@@ -12,6 +12,14 @@ urdfRootPath=pybullet_data.getDataPath()
 # adding the robot
 jacoUid = p.loadURDF(os.path.join(urdfRootPath,"jaco/j2s7s300_gym.urdf"), useFixedBase=True)
 
+JointNum=p.getNumJoints(jacoUid)
+print('Number of joints are:')
+print(JointNum)
+
+JointInfo=p.getJointInfo(jacoUid,0)
+print('Joint information are:')
+print(JointInfo)
+
 # adding the table 
 #tableUid = p.loadURDF(os.path.join(urdfRootPath, "table/table.urdf"),basePosition=[0.5,0,-0.65])
 

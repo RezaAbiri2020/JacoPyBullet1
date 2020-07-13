@@ -22,28 +22,34 @@ class JacoEnv(gym.Env):
     def __init__(self):
 
             p.connect(p.GUI)
-            p.resetDebugVisualizerCamera(cameraDistance=1.5, cameraYaw=0, cameraPitch=-40, cameraTargetPosition=[0.55,-0.35,0.2])
+            p.resetDebugVisualizerCamera(cameraDistance=2.3, cameraYaw=0, cameraPitch=-40, cameraTargetPosition=[0.55,-0.35,0.2])
             self.action_space = spaces.Box(np.array([-1]*3), np.array([1]*3))
             self.observation_space = spaces.Box(np.array([-1]*3), np.array([1]*3))
 
     def step(self,action):
 
         p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING)
+        # define/force the orientation of end-effector to be down for picking up objects 
         orientation = p.getQuaternionFromEuler([0.,-math.pi,math.pi/2.])
         dv = 0.005
         dx = action[0] * dv
         dy = action[1] * dv
         dz = action[2] * dv
         
+        # reading the end-effector (link 8) info: positions and orientations; only use positions
         currentPose = p.getLinkState(self.jacoUid, 8)
         currentPosition = currentPose[0]
         newPosition = [currentPosition[0] + dx,
                        currentPosition[1] + dy,
                        currentPosition[2] + dz]
+        
+        # calculate the inverse kin caused by pos and orientation for later necessary actuating 
         jointPoses = p.calculateInverseKinematics(self.jacoUid,8,newPosition, orientation)
-        print('jointPoses are:')
-        print(jointPoses)
+        #print('necessary jointPoses for 7 links and 3 fingers are:')
+        #print(jointPoses)
+
         # jointposes will be the values of all 7 joints and 3 fingers
+        # move the robot a little bit
         p.setJointMotorControlArray(self.jacoUid, [1, 2, 3, 4, 5, 6, 7, 9, 11, 13], p.POSITION_CONTROL, list(jointPoses))
 
         p.stepSimulation()
@@ -52,8 +58,9 @@ class JacoEnv(gym.Env):
         state_robot = p.getLinkState(self.jacoUid, 8)[0]
         #state_fingers = (p.getJointState(self.pandaUid,9)[0], p.getJointState(self.pandaUid, 10)[0])
         
-        target = [1, 1, 1]
-        if (state_robot[0]-target[0])<0.2 and (state_robot[1]-target[1])<0.2 and (state_robot[2]-target[2])<0.2:
+        # assuming a target location for reaching in space with these positions in xyz
+        target = [0.65, 0, 0.5]
+        if abs(state_robot[0]-target[0])<0.05 and abs(state_robot[1]-target[1])<0.05 and abs(state_robot[2]-target[2])<0.05:
             reward = 1
             done = True
         else:
@@ -61,6 +68,7 @@ class JacoEnv(gym.Env):
             done = False
         info = state_robot
         observation = state_robot
+        
         return observation, reward, done, info
 
 
@@ -69,7 +77,8 @@ class JacoEnv(gym.Env):
         p.resetSimulation()
         # we will enable rendering after we loaded everything
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,0) 
-        p.setGravity(0,0,-10)
+        
+        #p.setGravity(0,0,-10)
         urdfRootPath=pybullet_data.getDataPath()
 
         planeUid = p.loadURDF(os.path.join(urdfRootPath,"plane.urdf"), basePosition=[0,0,-0.65])
@@ -77,6 +86,8 @@ class JacoEnv(gym.Env):
         # for fixed values 
         #rest_poses = [math.pi/1., math.pi/1., math.pi/1., math.pi/1., math.pi/1., math.pi/1., math.pi/1.]
         self.jacoUid = p.loadURDF(os.path.join(urdfRootPath,"jaco/j2s7s300_gym.urdf"), useFixedBase=True)
+        
+        # start with a random initial positions
         for i in range(7):
             p.resetJointState(self.jacoUid,i, random.uniform(1,3))
 
@@ -86,7 +97,7 @@ class JacoEnv(gym.Env):
 
         #state_object= [random.uniform(0.5,0.8),random.uniform(-0.2,0.2),0.05]
         
-        self.objectUid = p.loadURDF(os.path.join(urdfRootPath, "random_urdfs/000/000.urdf"), basePosition=[0.65,0,0.05])
+        self.objectUid = p.loadURDF(os.path.join(urdfRootPath, "random_urdfs/000/000.urdf"), basePosition=[0.65,0,0.5])
         
         # get only the position of end-effector
         state_robot = p.getLinkState(self.jacoUid, 8)[0]
@@ -96,7 +107,7 @@ class JacoEnv(gym.Env):
         
         # for step one; only output the end-effector position
         observation = state_robot
-        
+
         # rendering's back on again
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1) 
         return observation
