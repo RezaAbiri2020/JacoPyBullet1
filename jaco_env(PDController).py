@@ -43,8 +43,6 @@ class JacoEnv(gym.Env):
                        currentPosition[1] + dy,
                        currentPosition[2] + dz]
         
-        #print(currentPosition)
-        
         # calculate the inverse kin caused by pos and orientation for later necessary actuating 
         jointPoses = p.calculateInverseKinematics(self.jacoUid,8,newPosition, orientation)
         #print('necessary jointPoses for 7 links and 3 fingers are:')
@@ -58,7 +56,6 @@ class JacoEnv(gym.Env):
 
         #state_object, _ = p.getBasePositionAndOrientation(self.objectUid)
         state_robot = p.getLinkState(self.jacoUid, 8)[0]
-        # print(state_robot)
         #state_fingers = (p.getJointState(self.pandaUid,9)[0], p.getJointState(self.pandaUid, 10)[0])
         
         # assuming a target location for reaching in space with these positions in xyz
