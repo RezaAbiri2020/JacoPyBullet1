@@ -14,8 +14,8 @@ env = gym.make('jaco-v0')
 
 LEARNING_RATE = 0.1
 DISCOUNT = 0.95
-EPISODES = 1
-Samples = 100
+EPISODES = 50
+Samples = 500
 SHOW_EVERY=10
 
 DiscreteNum_SizeQ = 10
@@ -49,6 +49,8 @@ def get_continous_action(index):
 
 
 for episode in range(EPISODES):
+	print("this is episode #:")
+	print(episode)
      
 	if episode % SHOW_EVERY == 0:
 		#print(episode)
@@ -62,8 +64,16 @@ for episode in range(EPISODES):
 	while sample < Samples:
 		sample = sample+1
 		index = np.unravel_index(np.argmax(q_table[discrete_state], axis=None), q_table[discrete_state].shape)
+		
+		if index[0] == 10:
+			index[0] == 9
+		if index[1] == 10:
+			index[1] == 9
+		if index[2] == 10:
+			index[2] == 9
+		
 		continous_action = get_continous_action(index)
-		print(continous_action)
+		#print(continous_action)
 		new_state, reward, done, info = env.step(continous_action)
 		new_discrete_state = get_discrete_state(new_state)
 

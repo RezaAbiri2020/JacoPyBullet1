@@ -31,7 +31,7 @@ class JacoEnv(gym.Env):
         p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING)
         # define/force the orientation of end-effector to be down for picking up objects 
         orientation = p.getQuaternionFromEuler([0.,-math.pi,math.pi/2.])
-        dv = 0.005
+        dv = 1 #0.005
         dx = action[0] * dv
         dy = action[1] * dv
         dz = action[2] * dv
